@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package dfs;
+
+option go_package = "github.com/TheDhejavu/afs-protocol/internal/proto/gen";
+
+service FileSystemService {
+    // Acquire store / delete lock 
+    rpc AcquireWriteAccess(WriteAccessRequest) returns (WriteAccessResponse);
+
+    // Store file on remote server
+    rpc Store(stream FileData) returns (StoreResponse);
+    
+    // Fetch file from remote server
+    rpc Fetch(FetchRequest) returns (stream FileData);
+
+    // Delete deletes file from remote server
+    rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+    // Get the stat info for a file
+    rpc GetFileStat(GetFileStatRequest) returns (File);
+    
+    // Client requests changes
+    rpc RequestFilesAsync(RequestFilesAsyncRequest) returns (RequestFilesAsyncResponse);
+}
+
+message FileData {
+    string filename = 1;
+    bytes content = 2;
+    string client_id = 3;
+    int64 mtime = 4;
+}
+
+message StoreResponse {
+    bool success  = 1;
+}
+
+message DeleteRequest {
+    string filename = 1;
+    string client_id = 3;
+}
+
+message DeleteResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message FetchRequest {
+    string filename = 1;
+    string client_id = 3;
+}
+
+message GetFileStatRequest {
+    string filename = 1;
+}
+
+message RequestFilesAsyncRequest {
+    string client_id = 1;
+}
+ 
+message RequestFilesAsyncResponse {
+    repeated File files = 1;
+}
+
+message File {
+    string filename = 1;
+    int64 size = 2;
+    int64 mtime = 3;
+    int64 created_time = 4;
+    uint32 crc_checksum = 5;  
+    bool deleted = 6;
+}
+
+message WriteAccessRequest {
+    string filename = 1;
+    string client_id = 2;
+} 
+
+message WriteAccessResponse {
+    bool success = 1;
+    string error = 2;
+}
