@@ -44,41 +44,20 @@ sequenceDiagram
     
 ```
 
-## Core Components
+### Architecture Overview
+The distributed file synchronization system consists of two main components: `a server` and `multiple clients`. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
 
-### Server
-- Single centralized server that manages file storage and synchronization
-- Maintains authoritative copies of all files
-- Handles client requests for file operations
-- Implements callback mechanism for client synchronization
+### Client Components
+On the client side, multiple nodes can access and modify files through both automatic and manual means. Each client implements folder monitoring for automatic change detection and provides a CLI interface for manual file operations. Clients are responsible for maintaining their local file state and ensuring proper synchronization with the server.
 
-### Clients
-- Multiple client nodes that can access and modify files
-- Implements folder monitoring for automatic change detection
-- Provides CLI interface for manual file operations
-- Maintains local file state and synchronizes with server
+### Core Operations
+The system supports two key file management operations: `STORE` and `DELETE`. The `STORE` operation handles both creating new files and updating existing ones, while `DELETE` removes files from the system. These operations can be triggered either through the automatic folder monitoring system or via manual CLI commands.
 
-## Key Operations
+### Synchronization Architecture
+The synchronization mechanism employs a "train station" model for callbacks using gRPC. Clients initiate continuous synchronization requests to the server, and the system uses file checksums and modification timestamps to track changes. Clients maintain active connections to receive updates whenever changes occur in the system.
 
-### File Management
-- `STORE`: Creates new files or updates existing ones
-- `DELETE`: Removes files from the system
-- Changes can be triggered either through:
-  - Automatic folder monitoring system
-  - Manual CLI commands
-
-### Synchronization Mechanism
-- Implements a "train station" model for callbacks using gRPC
-- Clients initiate continuous synchronization requests to the server
-- Server-client synchronization uses file checksums and modification timestamps
-- Clients maintain active connections to receive updates when changes occur
-
-## Synchronization Process
-1. Client detects changes through folder monitoring or CLI commands
-2. Client initiates communication with server
-3. Server compares checksums and modification times
-4. Server broadcasts changes to connected clients through callback mechanism
-5. Clients update their local files to match server state
+### Process Flow
+First, a client detects changes either through folder monitoring or CLI commands. The client then initiates communication with the server, which compares checksums and modification times to determine what has changed. Finally, the server broadcasts these changes to all connected clients through the callback mechanism, and the clients update their local files to match the server's state.
 
 ## Get Started
 
