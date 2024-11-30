@@ -89,7 +89,7 @@ Client 3
 
 ### AFS Server Command
 
-```sh
+```
 Usage:
   ./afs-server [flags]
 
@@ -102,7 +102,7 @@ Flags:
 
 ### AFS Client Command
 
-```sh
+```
 Usage:
   ./afs-client [command]
 
