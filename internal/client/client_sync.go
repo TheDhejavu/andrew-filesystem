@@ -2,10 +2,11 @@ package client
 
 import (
 	"context"
-	"log"
+
 	"time"
 
 	"github.com/TheDhejavu/afs-protocol/internal/common/types"
+	"github.com/rs/zerolog/log"
 )
 
 type FileSync struct {
@@ -36,7 +37,7 @@ func (w *FileSync) requestAndSync(ctx context.Context) {
 func (w *FileSync) processRemoteFiles(ctx context.Context) {
 	remoteFiles, err := w.client.RequestFilesAsync(ctx)
 	if err != nil {
-		log.Printf("Sync failed: %v", err)
+		log.Error().Err(err).Msg("Sync failed")
 		return
 	}
 
@@ -71,8 +72,6 @@ func (w *FileSync) handleMissingFile(ctx context.Context, remoteFile *types.File
 }
 
 func (w *FileSync) handleChecksumMismatch(ctx context.Context, localFile, remoteFile *types.FileInfo) {
-	log.Printf("Local file: %d", localFile.ModifiedTime)
-	log.Printf("Remote file: %d", remoteFile.ModifiedTime)
 	if localFile.ModifiedTime > remoteFile.ModifiedTime {
 		w.uploadFile(ctx, remoteFile.Filename)
 	} else {

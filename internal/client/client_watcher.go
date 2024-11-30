@@ -3,9 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
-	"log"
 	"path/filepath"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/fsnotify/fsnotify"
 )
