@@ -1,7 +1,7 @@
+// cmd/server/main.go
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -9,19 +9,37 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/TheDhejavu/afs-protocol/internal/common/storage"
 	"github.com/TheDhejavu/afs-protocol/internal/config"
 	pb "github.com/TheDhejavu/afs-protocol/internal/proto/gen"
 	"github.com/TheDhejavu/afs-protocol/internal/server"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
 
-func main() {
-	cfg := parseFlags()
+var (
+	cfg = &config.Config{}
 
+	rootCmd = &cobra.Command{
+		Use:   "afs-server",
+		Short: "Andrew Distributed File System Server",
+		Long: `A distributed file system server that handles file operations 
+               with lock-based concurrency control.`,
+		RunE: runServer,
+	}
+)
+
+func init() {
+	rootCmd.Flags().IntVar(&cfg.Port, "port", 50051, "The server port")
+	rootCmd.Flags().StringVar(&cfg.MountPath, "mount", "./mount/server",
+		"Storage directory for files")
+}
+
+func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize storage
-	storage, err := server.NewDiskStorage(cfg.MountPath)
+	storage, err := storage.NewDiskStorage(cfg.MountPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize disk storage: %v", err)
+		return fmt.Errorf("failed to initialize disk storage: %v", err)
 	}
 
 	// Create service layer
@@ -37,7 +55,7 @@ func main() {
 	// Start listening
 	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	// Handle graceful shutdown
@@ -45,19 +63,11 @@ func main() {
 
 	// Start server
 	log.Printf("Server starting on port %d", cfg.Port)
-	if err := server.Serve(listen); err != nil {	
-		log.Fatalf("Failed to serve: %v", err)
+	if err := server.Serve(listen); err != nil {
+		return fmt.Errorf("failed to serve: %v", err)
 	}
-}
 
-func parseFlags() *config.Config {
-	cfg := &config.Config{}
-
-	flag.IntVar(&cfg.Port, "port", 50051, "The server port")
-	flag.StringVar(&cfg.MountPath, "mount", "./mnt/server", "Storage directory for files")
-
-	flag.Parse()
-	return cfg
+	return nil
 }
 
 func handleShutdown(server *grpc.Server) {
@@ -70,4 +80,11 @@ func handleShutdown(server *grpc.Server) {
 	server.GracefulStop()
 	log.Println("Server stopped")
 	os.Exit(0)
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

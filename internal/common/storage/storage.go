@@ -1,4 +1,4 @@
-package server
+package storage
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ type diskStorage struct {
 }
 
 func NewDiskStorage(mountPath string) (Storage, error) {
-	if err := ensureStorageDir(mountPath); err != nil {
+	if err := ensureMountDir(mountPath); err != nil {
 		return nil, fmt.Errorf("failed to create storage directory: %v", err)
 	}
 
@@ -48,17 +48,19 @@ func (s *diskStorage) FileExists(filename string) (bool, error) {
 
 func (s *diskStorage) StatFile(filename string) (*types.FileInfo, error) {
 	file, err := os.Stat(filepath.Join(s.mountPath, filename))
-	if err == nil {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
+
 	if os.IsNotExist(err) {
-		return nil, nil
+		return nil, fmt.Errorf("file does not exist")
 	}
 
 	checksum, err := getChecksum(filepath.Join(s.mountPath, filename))
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.FileInfo{
 		Filename:     filename,
 		Size:         file.Size(),
@@ -130,7 +132,7 @@ func (s *diskStorage) ReadFile(filename string, chunkSize int, callback ChunkCal
 
 	return nil
 }
-func ensureStorageDir(dir string) error {
+func ensureMountDir(dir string) error {
 	// Create storage directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create storage directory: %w", err)
@@ -156,8 +158,10 @@ func (s *diskStorage) ListFiles() ([]*types.FileInfo, error) {
 			}
 
 			files = append(files, &types.FileInfo{
-				Filename: info.Name(),
-				Checksum: checksum,
+				Filename:     info.Name(),
+				Checksum:     checksum,
+				ModifiedTime: info.ModTime().Unix(),
+				Size:         info.Size(),
 			})
 		}
 		return nil

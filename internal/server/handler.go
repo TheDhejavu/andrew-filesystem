@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/TheDhejavu/afs-protocol/internal/common/channel"
 	pb "github.com/TheDhejavu/afs-protocol/internal/proto/gen"
 	"github.com/rs/zerolog/log"
 
@@ -82,7 +83,7 @@ func (h *DFSHandler) GetFileStat(ctx context.Context, req *pb.GetFileStatRequest
 }
 
 func (h *DFSHandler) Store(stream pb.FileSystemService_StoreServer) error {
-	boundedStream := NewBoundedStream(20)
+	boundedStream := channel.NewBoundedStream(20)
 
 	// Get first chunk to initialize
 	chunk, err := stream.Recv()
@@ -141,7 +142,7 @@ func (h *DFSHandler) Store(stream pb.FileSystemService_StoreServer) error {
 }
 
 func (h *DFSHandler) Fetch(req *pb.FetchRequest, stream pb.FileSystemService_FetchServer) error {
-	boundedStream := NewBoundedStream(20)
+	boundedStream := channel.NewBoundedStream(20)
 
 	errChan := make(chan error, 1)
 	go func() {

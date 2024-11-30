@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/TheDhejavu/afs-protocol/internal/common/channel"
+	"github.com/TheDhejavu/afs-protocol/internal/common/storage"
 	"github.com/TheDhejavu/afs-protocol/internal/common/types"
 )
 
@@ -14,18 +16,18 @@ type FileService interface {
 	ListFiles(ctx context.Context) ([]*types.FileInfo, error)
 
 	// Operations
-	Store(ctx context.Context, filename string, clientID string, stream *BoundedStream) error
+	Store(ctx context.Context, filename string, clientID string, stream *channel.BoundedStream) error
 	Delete(ctx context.Context, filename string, clientID string) error
-	Fetch(ctx context.Context, filename string, stream *BoundedStream) error
+	Fetch(ctx context.Context, filename string, stream *channel.BoundedStream) error
 	GetFileStat(ctx context.Context, filename string) (*types.FileInfo, error)
 }
 
 type fileService struct {
-	storage     Storage
+	storage     storage.Storage
 	lockManager LockManager
 }
 
-func NewFileService(storage Storage) FileService {
+func NewFileService(storage storage.Storage) FileService {
 	return &fileService{
 		lockManager: NewLockManager(),
 		storage:     storage,
@@ -44,7 +46,7 @@ func (s *fileService) ListFiles(ctx context.Context) ([]*types.FileInfo, error) 
 	return s.storage.ListFiles()
 }
 
-func (s *fileService) Store(ctx context.Context, filename string, clientID string, stream *BoundedStream) error {
+func (s *fileService) Store(ctx context.Context, filename string, clientID string, stream *channel.BoundedStream) error {
 	if err := s.lockManager.Check(filename, clientID); err != nil {
 		return err
 	}
@@ -70,7 +72,7 @@ func (s *fileService) Store(ctx context.Context, filename string, clientID strin
 	}
 }
 
-func (s *fileService) Fetch(ctx context.Context, filename string, stream *BoundedStream) error {
+func (s *fileService) Fetch(ctx context.Context, filename string, stream *channel.BoundedStream) error {
 	defer stream.Close()
 
 	chunkSize := 1000

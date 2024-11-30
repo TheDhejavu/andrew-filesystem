@@ -74,6 +74,7 @@ test:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -f bin/*
+	rm -f tmp/*
 	rm -f $(PROTO_DIR)/*.pb.go
 
 # Install dependencies

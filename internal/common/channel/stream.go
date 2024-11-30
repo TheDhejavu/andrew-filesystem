@@ -1,4 +1,4 @@
-package server
+package channel
 
 type BoundedStream struct {
 	stream chan []byte

@@ -7,7 +7,42 @@ The Andrew File System implements a straightforward client-server architecture f
 
 
 ## Architecture
-![AFS Architecture](docs/images/afs.png)
+```mermaid
+sequenceDiagram
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant S as Server
+
+    Note over C1,C2: Multiple clients connected
+    
+    % Initial connection
+    C1->>S: Initialize connection
+    C2->>S: Initialize connection
+    
+    % File change detection
+    Note over C1: File change detected<br/>(monitor/CLI)
+    
+    % Store operation
+    C1->>S: STORE operation
+    activate S
+    S-->>S: Update master copy
+    S-->>S: Calculate new checksum
+    
+    % Broadcast to other clients
+    par Broadcast to clients
+        S->>C1: Sync notification
+        S->>C2: Sync notification
+    end
+    deactivate S
+    
+    % Client 2 sync
+    activate C2
+    C2->>S: Request file data
+    S-->>C2: Send updated file
+    C2-->>C2: Update local copy
+    deactivate C2
+    
+```
 
 ## Core Components
 
@@ -54,10 +89,20 @@ make setup
 
 Start Server
 ```sh
-./bin/afs-server  --mount=./tmp/server
+./bin/afs-server --mount=./tmp/server
 ```
 
-Start Server
+Client 1
 ```sh
-./bin/afs-client  --mount=./tmp/client
+./bin/afs-client --id client1 --mount ./tmp/client1 watch
+```
+
+Client 2
+```sh
+./bin/afs-client --id client2 --mount ./tmp/client2 watch
+```
+
+Client 3
+```sh
+./bin/afs-client --id client3 --mount ./tmp/client3 watch
 ```
