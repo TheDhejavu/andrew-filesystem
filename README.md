@@ -85,3 +85,42 @@ Client 3
 ```sh
 ./bin/afs-client --id client3 --mount ./tmp/client3 watch
 ```
+
+
+### AFS Server Command
+
+```sh
+A distributed file system server that handles file operations 
+               with lock-based concurrency control.
+
+Usage:
+  afs-server [flags]
+
+Flags:
+  -h, --help           help for afs-server
+      --mount string   Storage directory for files (default "./mount/server")
+      --port int       The server port (default 50051)
+```
+
+
+### AFS Client Command
+
+```sh
+Andrew Distributed File System Client
+
+Usage:
+  afs-client [command]
+
+Available Commands:
+  delete      Delete a file from the system
+  fetch       Fetch a file from the system
+  help        Help about any command
+  store       Store a file in the system
+  watch       Watch the mount directory for changes and sync with AFS
+
+Flags:
+  -h, --help            help for afs-client
+      --id string       client identifier
+      --mount string    Storage directory for client cache (default "./tmp/client")
+      --server string   server address (default "localhost:50051")
+```
