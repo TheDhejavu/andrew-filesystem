@@ -90,11 +90,8 @@ Client 3
 ### AFS Server Command
 
 ```sh
-A distributed file system server that handles file operations 
-               with lock-based concurrency control.
-
 Usage:
-  afs-server [flags]
+  ./afs-server [flags]
 
 Flags:
   -h, --help           help for afs-server
@@ -106,10 +103,8 @@ Flags:
 ### AFS Client Command
 
 ```sh
-Andrew Distributed File System Client
-
 Usage:
-  afs-client [command]
+  ./afs-client [command]
 
 Available Commands:
   delete      Delete a file from the system
