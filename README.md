@@ -5,7 +5,7 @@ The Andrew File System: https://pages.cs.wisc.edu/~remzi/OSTEP/dist-afs.pdf
 
 The Andrew File System implements a straightforward client-server architecture for distributed file management. The system consists of a central server and multiple client nodes.
 
-### Architecture Overview
+### Architecture
 The distributed file synchronization system consists of two main components: **a server** and **multiple clients**. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
 
 ```mermaid
