@@ -5,8 +5,9 @@ The Andrew File System: https://pages.cs.wisc.edu/~remzi/OSTEP/dist-afs.pdf
 
 The Andrew File System implements a straightforward client-server architecture for distributed file management. The system consists of a central server and multiple client nodes.
 
+### Architecture Overview
+The distributed file synchronization system consists of two main components: **a server** and **multiple clients**. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
 
-## Architecture
 ```mermaid
 sequenceDiagram
     participant C1 as Client 1
@@ -25,7 +26,7 @@ sequenceDiagram
     % Store operation
     C1->>S: STORE operation
     activate S
-    S-->>S: Update master copy
+    S-->>S: Update master/server copy
     S-->>S: Calculate new checksum
     
     % Broadcast to other clients
@@ -44,14 +45,46 @@ sequenceDiagram
     
 ```
 
-### Architecture Overview
-The distributed file synchronization system consists of two main components: **a server** and **multiple clients**. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
-
 ### Client Components
 On the client side, multiple nodes can access and modify files through both automatic and manual means. Each client implements folder monitoring for automatic change detection and provides a CLI interface for manual file operations. Clients are responsible for maintaining their local file state and ensuring proper synchronization with the server.
 
+![Client Components](docs/images/client-components.png)
+
 ### Core Operations
-The system supports two key file management operations: `STORE` and `DELETE`. The `STORE` operation handles both creating new files and updating existing ones, while `DELETE` removes files from the system. These operations can be triggered either through the automatic folder monitoring system or via manual CLI commands.
+The system supports two key file management operations: `FETCH`, `STORE` and `DELETE`. The `STORE` operation handles both creating new files and updating existing ones, while `DELETE` removes files from the system. These operations can be triggered either through the automatic folder monitoring system or via manual CLI commands.
+
+```mermaid
+flowchart TD
+    Start([Start Operation])
+
+    Start --> FileOp{Operation Type?}
+    FileOp -->|STORE| CheckExists{File Exists?}
+    
+    
+    CheckExists -->|No| NewFile[Create New File]
+    NewFile --> Broadcast1[Broadcast to Clients]
+    
+    %% Update Flow
+    CheckExists -->|Yes| CompareChecksum{Compare Checksums}
+    CompareChecksum -->|Different| UpdateFile[Update File Content]
+    UpdateFile --> Broadcast2[Broadcast to Clients]
+    CompareChecksum -->|Same| NoAction[No Action Needed]
+    
+    
+    FileOp -->|DELETE| CheckDeletion{File Exists?}
+    CheckDeletion -->|Yes| AddTombstone[Add to Tombstone]
+    AddTombstone --> Broadcast3[Broadcast Deletion]
+    CheckDeletion -->|No| NoActionNeeded[No Action Needed]
+    
+    
+    classDef process fill:#68a063,stroke:#333,stroke-width:2px,color:white
+    classDef decision fill:#c3963a,stroke:#333,stroke-width:2px,color:white
+    classDef endpoint fill:#5a7bb5,stroke:#333,stroke-width:2px,color:white
+    
+    class Start,NoAction,NoActionNeeded endpoint
+    class CheckExists,CompareChecksum,CheckDeletion decision
+    class NewFile,UpdateFile,AddTombstone,Broadcast1,Broadcast2,Broadcast3 process
+```
 
 ### Synchronization Architecture
 The synchronization mechanism employs a "train station" model for callbacks using gRPC. Clients initiate continuous synchronization requests to the server, and the system uses file checksums and modification timestamps to track changes. Clients maintain active connections to receive updates whenever changes occur in the system.

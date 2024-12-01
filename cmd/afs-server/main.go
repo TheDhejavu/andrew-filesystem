@@ -78,8 +78,8 @@ func handleShutdown(server *grpc.Server, fileService server.FileService) {
 	log.Println("Received shutdown signal, gracefully stopping server...")
 
 	server.GracefulStop()
-	fileService.Stop();
-	
+	fileService.Stop()
+
 	log.Println("Server stopped")
 	os.Exit(0)
 }

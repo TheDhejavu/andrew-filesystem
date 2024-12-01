@@ -140,6 +140,10 @@ func (c *Client) Store(ctx context.Context, filename string) error {
 	}
 
 	chunkSize := 1048 // 1KB
+	fileStat, err := c.storage.StatFile(filename)
+	if err != nil {
+		return fmt.Errorf("failed to start store stream: %v", err)
+	}
 
 	err = c.storage.ReadFile(filename, chunkSize, func(chunk []byte) error {
 		select {
@@ -147,9 +151,10 @@ func (c *Client) Store(ctx context.Context, filename string) error {
 			return ctx.Err()
 		default:
 			if err := stream.Send(&pb.FileData{
-				Filename: filename,
-				Content:  chunk,
-				ClientId: c.clientID,
+				Filename:    filename,
+				Content:     chunk,
+				ClientId:    c.clientID,
+				CrcChecksum: fileStat.Checksum,
 			}); err != nil {
 				return fmt.Errorf("failed to send chunk: %v", err)
 			}

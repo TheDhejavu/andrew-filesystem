@@ -92,6 +92,13 @@ func (h *DFSHandler) Store(stream pb.FileSystemService_StoreServer) error {
 		return status.Errorf(codes.Internal, "failed to receive initial chunk: %v", err)
 	}
 
+	if statFile, err := h.fileService.GetFileStat(stream.Context(), chunk.Filename); err == nil {
+		if statFile.Checksum == chunk.CrcChecksum {
+			log.Info().Msg("file already exist with same checksum. aborting....")
+			return nil
+		}
+	}
+
 	errChan := make(chan error, 1)
 	go func() {
 		err := h.fileService.Store(stream.Context(), chunk.Filename, chunk.ClientId, boundedStream)
