@@ -89,8 +89,6 @@ flowchart TD
 ### Synchronization Architecture
 The synchronization mechanism employs a "train station" model for callbacks using gRPC. Clients initiate continuous synchronization requests to the server, and the system uses file checksums and modification timestamps to track changes. Clients maintain active connections to receive updates whenever changes occur in the system.
 
-### Process Flow
-First, a client detects changes either through folder monitoring or CLI commands. The client then initiates communication with the server, which compares checksums and modification times to determine what has changed. Finally, the server broadcasts these changes to all connected clients through the callback mechanism, and the clients update their local files to match the server's state.
 
 ## Get Started
 
