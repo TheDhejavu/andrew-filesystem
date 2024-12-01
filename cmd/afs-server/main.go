@@ -59,7 +59,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 
 	// Handle graceful shutdown
-	go handleShutdown(server)
+	go handleShutdown(server, fileService)
 
 	// Start server
 	log.Printf("Server starting on port %d", cfg.Port)
@@ -70,7 +70,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func handleShutdown(server *grpc.Server) {
+func handleShutdown(server *grpc.Server, fileService server.FileService) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -78,6 +78,8 @@ func handleShutdown(server *grpc.Server) {
 	log.Println("Received shutdown signal, gracefully stopping server...")
 
 	server.GracefulStop()
+	fileService.Stop();
+	
 	log.Println("Server stopped")
 	os.Exit(0)
 }

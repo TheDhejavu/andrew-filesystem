@@ -20,6 +20,8 @@ type FileService interface {
 	Delete(ctx context.Context, filename string, clientID string) error
 	Fetch(ctx context.Context, filename string, stream *channel.BoundedStream) error
 	GetFileStat(ctx context.Context, filename string) (*types.FileInfo, error)
+
+	Stop()
 }
 
 type fileService struct {
@@ -133,4 +135,9 @@ func (s *fileService) GetFileStat(ctx context.Context, filename string) (*types.
 	}
 
 	return s.storage.StatFile(filename)
+}
+
+func (s *fileService) Stop() {
+	s.tombstoneMarker.Stop()
+	s.lockManager.Close()
 }
