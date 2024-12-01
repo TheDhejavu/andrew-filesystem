@@ -79,6 +79,7 @@ func (h *DFSHandler) GetFileStat(ctx context.Context, req *pb.GetFileStatRequest
 		Size:        file.Size,
 		Mtime:       file.ModifiedTime,
 		CrcChecksum: file.Checksum,
+		Deleted:     file.IsDeleted,
 	}, nil
 }
 
@@ -211,7 +212,7 @@ func (h *DFSHandler) processQueue() {
 				CrcChecksum: f.Checksum,
 				Mtime:       f.ModifiedTime,
 				Filename:    f.Filename,
-				Deleted:     false,
+				Deleted:     f.IsDeleted,
 				Size:        f.Size,
 			})
 		}

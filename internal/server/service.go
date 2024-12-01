@@ -23,14 +23,16 @@ type FileService interface {
 }
 
 type fileService struct {
-	storage     storage.Storage
-	lockManager LockManager
+	storage         storage.Storage
+	lockManager     LockManager
+	tombstoneMarker *Tombstone
 }
 
 func NewFileService(storage storage.Storage) FileService {
 	return &fileService{
-		lockManager: NewLockManager(),
-		storage:     storage,
+		lockManager:     NewLockManager(),
+		storage:         storage,
+		tombstoneMarker: NewTombstone(),
 	}
 }
 
@@ -43,12 +45,21 @@ func (s *fileService) ReleaseLock(ctx context.Context, filename, clientID string
 }
 
 func (s *fileService) ListFiles(ctx context.Context) ([]*types.FileInfo, error) {
-	return s.storage.ListFiles()
+	files, err := s.storage.ListFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	return s.tombstoneMarker.MergeWithFiles(files), nil
 }
 
 func (s *fileService) Store(ctx context.Context, filename string, clientID string, stream *channel.BoundedStream) error {
 	if err := s.lockManager.Check(filename, clientID); err != nil {
 		return err
+	}
+
+	if s.tombstoneMarker.IsDeleted(filename) {
+		s.tombstoneMarker.Remove(filename)
 	}
 
 	overwrite := true
@@ -103,12 +114,22 @@ func (s *fileService) Delete(ctx context.Context, filename string, clientID stri
 		return fmt.Errorf("failed to delete file: %v", err)
 	}
 
+	s.tombstoneMarker.Insert(filename)
+
 	return nil
 }
 
 func (s *fileService) GetFileStat(ctx context.Context, filename string) (*types.FileInfo, error) {
 	if ok, err := s.storage.FileExists(filename); err != nil && !ok {
 		return nil, fmt.Errorf("unable to get file stat: %v", err)
+	}
+
+	if tombstone, ok := s.tombstoneMarker.Get(filename); ok {
+		return &types.FileInfo{
+			IsDeleted:    true,
+			Filename:     filename,
+			ModifiedTime: tombstone.deleted_time.Unix(),
+		}, nil
 	}
 
 	return s.storage.StatFile(filename)

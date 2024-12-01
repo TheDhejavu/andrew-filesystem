@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"errors"
+	"os"
 
 	"time"
 
@@ -49,13 +51,31 @@ func (w *FileSync) processRemoteFiles(ctx context.Context) {
 func (w *FileSync) syncFile(ctx context.Context, remoteFile *types.FileInfo) {
 	w.coord.mu.Lock()
 	defer w.coord.mu.Unlock()
-
 	localFile, err := w.client.storage.StatFile(remoteFile.Filename)
+
 	if err != nil {
-		w.handleMissingFile(ctx, remoteFile)
+		if errors.Is(err, os.ErrNotExist) {
+			if remoteFile.IsDeleted {
+				// Both agree file doesn't exist - nothing to do
+				return
+			}
+			// File exists remotely but not locally - fetch it
+			w.handleMissingFile(ctx, remoteFile)
+			return
+		}
+		log.Error().Err(err).Str("file", remoteFile.Filename).Msg("Error checking local file")
 		return
 	}
 	if localFile == nil {
+		return
+	}
+
+	// Delete local file when the remote deletion is more recent (has a newer timestamp) than our local version,
+	//  ensuring we respect deletions that happened after our last sync.
+	if remoteFile.IsDeleted && remoteFile.ModifiedTime > localFile.ModifiedTime {
+		if err := w.client.storage.DeleteFile(remoteFile.Filename); err != nil {
+			log.Error().Err(err).Str("file", remoteFile.Filename).Msg("Failed to delete local file")
+		}
 		return
 	}
 

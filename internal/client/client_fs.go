@@ -98,6 +98,7 @@ func (c *Client) GetFileStat(ctx context.Context, filename string) (*types.FileI
 		ModifiedTime: resp.GetMtime(),
 		Size:         resp.Size,
 		Checksum:     resp.CrcChecksum,
+		IsDeleted:    resp.Deleted,
 	}, nil
 }
 
@@ -119,6 +120,7 @@ func (c *Client) RequestFilesAsync(ctx context.Context) ([]*types.FileInfo, erro
 			ModifiedTime: f.GetMtime(),
 			Size:         f.Size,
 			Checksum:     f.CrcChecksum,
+			IsDeleted:    f.Deleted,
 		})
 	}
 

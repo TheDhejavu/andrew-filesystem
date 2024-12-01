@@ -53,7 +53,7 @@ func (s *diskStorage) StatFile(filename string) (*types.FileInfo, error) {
 	}
 
 	if os.IsNotExist(err) {
-		return nil, fmt.Errorf("file does not exist")
+		return nil, os.ErrNotExist
 	}
 
 	checksum, err := getChecksum(filepath.Join(s.mountPath, filename))

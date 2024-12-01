@@ -45,7 +45,7 @@ sequenceDiagram
 ```
 
 ### Architecture Overview
-The distributed file synchronization system consists of two main components: `a server` and `multiple clients`. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
+The distributed file synchronization system consists of two main components: **a server** and **multiple clients**. The server acts as a centralized hub, managing file storage and synchronization while maintaining authoritative copies of all files. It handles incoming client requests for file operations and implements a callback mechanism to ensure proper synchronization across the system.
 
 ### Client Components
 On the client side, multiple nodes can access and modify files through both automatic and manual means. Each client implements folder monitoring for automatic change detection and provides a CLI interface for manual file operations. Clients are responsible for maintaining their local file state and ensuring proper synchronization with the server.
@@ -85,7 +85,6 @@ Client 3
 ```sh
 ./bin/afs-client --id client3 --mount ./tmp/client3 watch
 ```
-
 
 ### AFS Server Command
 

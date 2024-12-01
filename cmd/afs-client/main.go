@@ -24,7 +24,7 @@ func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&serverAddr, "server", "localhost:50051", "server address")
 	rootCmd.PersistentFlags().StringVar(&clientID, "id", "", "client identifier")
-	rootCmd.PersistentFlags().StringVar(&mountPath, "mount", "./tmp/client", "Storage directory for client cache")
+	rootCmd.PersistentFlags().StringVar(&mountPath, "mount", "./mount/client", "Storage directory for client cache")
 	rootCmd.MarkPersistentFlagRequired("id")
 
 	// Add commands
